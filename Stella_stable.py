@@ -1,35 +1,33 @@
-from sqlalchemy import Table, Column, String, MetaData
-from sqlalchemy import create_engine
 from tweepy.streaming import StreamListener
 from textblob import TextBlob
 from tweepy import Stream
 from tweepy import OAuthHandler
+from pymongo import MongoClient
 import re, json, time, datetime
 import numpy as np
 import tweepy
 
 """
 Stella is an app that connects to Twitter's API for the purpose of reading
-tweets that contains keywords specified by the user and analyze their sentiment 
-sentiment results are stored in a postgres db
+tweets in realtime that contains keywords specified by the user and analyze 
+their sentiment 
+
+we use a mongodb to store our data
 
 future implementations
  - compute standard deviation + z-score for each dataset
  - improve error handling
- - weight tweet importance by user (more followers = more weight)
+ - weight tweet importance by user (ie. more followers = more weight)
  - add data visualization
 """
 
 # init the interface to our db
-# this assumes you have a postgres db at your disposal. 
-db_string = "postgres://USER:PASSWORD@HOST:PORT/postgres" # replace capitalized words with your own details
-db = create_engine(db_string)
+# this assumes you are running a MongoDB at localhost on port 27017 
+connect = MongoClient('localhost', 27017)
+db = connect.your_db_name.your_collection_name # replace with your wanted db and collection name
 
-# replace *** with your own access tokens and secret keys. You need to create an account at https://developer.twitter.com/ and obtain them here
-consumer_key = '********************************'
-consumer_secret = '********************************'
-access_token = '********************************'
-access_token_secret = '********************************'
+# how often we write to our db (in seconds) 
+write_frequency = 60 
 
 # specify the keywords you want to track
 track_this = [
@@ -37,18 +35,24 @@ track_this = [
     'btc'
 ]
 
-# how often we write to our db (in seconds) 
-read_frequency = 60 
+# You need to create an account at https://developer.twitter.com/ 
+# and get your personal access tokens and secret keys
+# replace *** with your own 
+consumer_key = '********************************'
+consumer_secret = '********************************'
+access_token = '********************************'
+access_token_secret = '********************************'
 
 def calctime(a):
     return time.time()-a
 
-# we are counting and computing sentiment averages
-count = 0 
 average = 0
+count = 0 
+very_positive_count = 0
 positive_count = 0
 neutral_count = 0
 negative_count = 0
+very_negative_count = 0
 
 initime = time.time() # initializing time to create the timeseries
 
@@ -65,9 +69,11 @@ class listener(StreamListener):
         # we use global variables to temporarily store data before writing to our db
         global count
         global average
+        global very_positive_count
         global positive_count
         global neutral_count
         global negative_count
+        global very_negative_count
 
         count = count + 1
         senti = 0
@@ -77,7 +83,13 @@ class listener(StreamListener):
         for sen in blob.sentences:
             senti = senti + sen.sentiment.polarity
             
-            if sen.sentiment.polarity > 0.25:
+            if sen.sentiment.polarity > 0.6:
+                very_positive_count += 1
+
+            elif sen.sentiment.polarity < -0.6:
+                very_negative_count += 1
+
+            elif sen.sentiment.polarity > 0.25:
                 positive_count += 1
             
             elif sen.sentiment.polarity < -0.25:
@@ -105,18 +117,33 @@ twitterStream.filter(track = track_this, is_async=True)
 
 while True:
 
-    time.sleep(read_frequency)
+    time.sleep(write_frequency)
     now = datetime.datetime.now().isoformat()
 
     # prints aggregated data to terminal
-    print(f'{now} Total: {count} Sentiment: {average} Positive #: {positive_count} Neutral #: {neutral_count} Negative #: {negative_count}')
+    print(f'{now} Total:{count} Sentiment:{average} +Pos:{very_positive_count} Pos:{positive_count} Neu:{neutral_count} Neg:{negative_count} +Neg:{very_negative_count}')
 
-    # writes aggregated data to our db
-    db.execute("INSERT INTO bitcoin (time, sentiment, volume, positive, neutral, negative) VALUES (%s, %s, %s, %s, %s, %s)", (now, average, count, positive_count, neutral_count, negative_count))
+    # preparing aggregated data in dict before insterting to db 
+    entry = {
+        'coin':'bitcoin',
+        'time':now,
+        'sentiment':average,
+        'volume':count,
+        'very_positve':very_positive_count,
+        'positive':positive_count,
+        'neutral':neutral_count,
+        'negative':negative_count,
+        'very_negative':very_negative_count
+    }
+
+    # inserting our dict to db
+    db.insert_one(entry)
 
     # Reset aggregated data in global variables
     count = 0 
     average = 0
+    very_positive_count = 0
     positive_count = 0
     neutral_count = 0
     negative_count = 0
+    very_negative_count = 0 
