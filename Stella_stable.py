@@ -130,11 +130,13 @@ def start_stream(stream, **kwargs):
         except urllib3.exceptions.ReadTimeoutError:
             stream.disconnect()
             LOG.exception("ReadTimeoutError exception")
+            time.sleep(5)
             start_stream(stream, **kwargs)
 
         except urllib3.exceptions.IncompleteRead:
             stream.disconnect()
             LOG.exception("Cut off due to app consumes data slower than it is produced")
+            time.sleep(5)
             start_stream(stream, **kwargs)
 
 # initializing the stream
