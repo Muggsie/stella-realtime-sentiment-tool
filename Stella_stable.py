@@ -59,6 +59,9 @@ initime = time.time() # initializing time to create the timeseries
 logging.INFO
 LOG = logging.getLogger(__name__)
 
+print('Stella is initializing.... ')
+print(f'Will compute sentiment for Tweets that mention either one of these keywords {track_this}')
+
 class listener(StreamListener):
 
     def on_data(self, data):
@@ -124,21 +127,17 @@ def start_stream(stream, **kwargs):
             stream.filter(**kwargs)
             break
             
-        except urllib3.Response.ReadTimeoutError:
+        except urllib3.exceptions.ReadTimeoutError:
             stream.disconnect()
             LOG.exception("ReadTimeoutError exception")
             start_stream(stream, **kwargs)
-            
-        except urllib3.Response.SocketError:
-            stream.disconnect()
-            LOG.exception("Fatal exception. Consult logs.")
-            start_stream(stream, **kwargs)
 
-        except urllib3.Response.IncompleteRead:
+        except urllib3.exceptions.IncompleteRead:
             stream.disconnect()
             LOG.exception("Cut off due to app consumes data slower than it is produced")
             start_stream(stream, **kwargs)
 
+# initializing the stream
 start_stream(twitterStream, track = track_this, is_async=True)
 
 while True:
