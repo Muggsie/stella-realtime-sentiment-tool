@@ -4,22 +4,23 @@ from textblob import TextBlob
 from tweepy import Stream
 from tweepy import OAuthHandler
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 import numpy as np
 import tweepy
 
 """
 Stella is an app that connects to Twitter's API for the purpose of reading
 tweets in realtime that contains keywords specified by the user and analyze 
-their sentiment 
-
-we use a mongodb to store our data
-
-future implementations
- - compute standard deviation + z-score for each dataset
- - improve error handling
- - weight tweet importance by user (ie. more followers = more weight)
- - add data visualization
+their sentiment. Data is written to mongodb
 """
+
+# You need to create an account at https://developer.twitter.com/ 
+# and get your personal access tokens and secret keys
+# replace *** with your own 
+consumer_key = '********************************'
+consumer_secret = '********************************'
+access_token = '********************************'
+access_token_secret = '********************************'
 
 # init the interface to our db
 connect = MongoClient('localhost', 27017) # this assumes you are running a MongoDB at localhost on port 27017 
@@ -34,13 +35,6 @@ track_this = [
     'btc'
 ]
 
-# You need to create an account at https://developer.twitter.com/ 
-# and get your personal access tokens and secret keys
-# replace *** with your own 
-consumer_key = '********************************'
-consumer_secret = '********************************'
-access_token = '********************************'
-access_token_secret = '********************************'
 
 def calctime(a):
     return time.time()-a
@@ -152,6 +146,7 @@ while True:
 
     # preparing aggregated data in dict before insterting to db 
     entry = {
+        '_id': str(ObjectId()),
         'coin':'bitcoin',
         'time':now,
         'sentiment':average,
