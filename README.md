@@ -9,7 +9,7 @@ Some possible applications for this include:
 * Using sentiment scores as training features for a learning algorithm to determine stock buy and sell triggers
 * And more!
 
-![visualizing data](https://ibb.co/ctXGLMf)
+[![visualizing data](https://ibb.co/ctXGLMf)](https://github.com/Muggsie/stella-realtime-sentiment-tool)
 
 # Requirements
 You will need to obtain Twitter OAuth keys and supply them to Stella in order to connect to Twitter's streaming API. [here](https://twittercommunity.com/t/how-to-get-my-api-key/7033) for instructions on how to obtain your keys.
