@@ -139,7 +139,7 @@ start_stream(twitterStream, track = track_this, is_async=True)
 while True:
 
     time.sleep(write_frequency)
-    now = datetime.datetime.now().isoformat()
+    now = datetime.datetime.utcnow()
 
     # prints aggregated data to terminal
     print(f'{now} Total:{count} Sentiment:{average} +Pos:{very_positive_count} Pos:{positive_count} Neu:{neutral_count} Neg:{negative_count} +Neg:{very_negative_count}')
