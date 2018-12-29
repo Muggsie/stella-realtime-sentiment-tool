@@ -4,6 +4,7 @@ from tweepy import Stream, OAuthHandler
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 from textblob import TextBlob
+from credentials import *
 import numpy as np
 import tweepy
 
@@ -13,17 +14,9 @@ tweets in realtime that contains keywords specified by the user and analyze
 their sentiment. Data is written to mongodb.
 """
 
-# You need to create an account at https://developer.twitter.com/ 
-# and get your personal access tokens and secret keys
-# replace *** with your own 
-consumer_key = '********************************'
-consumer_secret = '********************************'
-access_token = '********************************'
-access_token_secret = '********************************'
-
 # init the interface to our db
 connect = MongoClient('localhost', 27017) # this assumes you are running a MongoDB at localhost on port 27017 
-db = connect.stella.sentiment # 'stella' is the database name and 'sentiment' is the collection name. You can change this to whatever you like
+db = connect.stella.sentiment # creates a db named stella and a collection names sentiment
 
 # how often we write to our db (in seconds) 
 write_frequency = 60 
