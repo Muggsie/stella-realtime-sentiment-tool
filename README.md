@@ -12,7 +12,7 @@ Some possible applications for this include:
 ![visualizing data](https://i.ibb.co/S07hrWY/example.jpg)
 
 # Requirements
-You will need to obtain Twitter OAuth keys and supply them to Stella in order to connect to Twitter's streaming API. [here](https://twittercommunity.com/t/how-to-get-my-api-key/7033) for instructions on how to obtain your keys.
+You will need to obtain Twitter OAuth keys in order to connect to Twitter's API. Once you have them, go to the file 'credentials.py' and replace the *** with your own OAuth keys.[Click here](https://twittercommunity.com/t/how-to-get-my-api-key/7033) for instructions on how to obtain your keys.
 
 Replace *** with your own keys:
 
