@@ -19,7 +19,7 @@ connect = MongoClient('localhost', 27017) # this assumes you are running a Mongo
 db = connect.stella.sentiment # creates a db named stella and a collection names sentiment
 
 # how often we write to our db (in seconds) 
-write_frequency = 60 
+write_frequency = 10 
 
 twitter_keywords_to_track = [
     'bitcoin',
@@ -98,34 +98,39 @@ class listener(StreamListener):
     def on_error(self, status):
         print(status)
 
-# feeding our twitter api access tokens
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
+def main():
+        
+    # feeding our twitter api access tokens
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_token, access_token_secret)
 
-# initilizing the listener 
-twitterStream = Stream(auth, listener(total_volume))
+    # initilizing the listener 
+    twitterStream = Stream(auth, listener(total_volume))
 
-# this section catches exceptions and restarts our listener
-def start_stream(stream, **kwargs):
-    while True:
-        try:
-            stream.filter(**kwargs)
-            break
-            
-        except urllib3.exceptions.ReadTimeoutError:
-            stream.disconnect()
-            LOG.exception("ReadTimeoutError exception")
-            time.sleep(5)
-            start_stream(stream, **kwargs)
+    # this section catches exceptions and restarts our listener
+    def start_stream(stream, **kwargs):
+        while True:
+            try:
+                stream.filter(**kwargs)
+                break
+                
+            except urllib3.exceptions.ReadTimeoutError:
+                stream.disconnect()
+                LOG.exception("ReadTimeoutError exception")
+                time.sleep(5)
+                start_stream(stream, **kwargs)
 
-        except urllib3.exceptions.IncompleteRead:
-            stream.disconnect()
-            LOG.exception("Cut off due to app consumes data slower than it is produced")
-            time.sleep(5)
-            start_stream(stream, **kwargs)
+            except urllib3.exceptions.IncompleteRead:
+                stream.disconnect()
+                LOG.exception("Cut off due to app consumes data slower than it is produced")
+                time.sleep(5)
+                start_stream(stream, **kwargs)
 
-# initializing the stream
-start_stream(twitterStream, track = twitter_keywords_to_track, is_async=True)
+    # initializing the stream
+    start_stream(twitterStream, track = twitter_keywords_to_track, is_async=True)
+
+if __name__ == "__main__":
+    main()
 
 while True:
 
